@@ -298,40 +298,42 @@ npm run start
 
 ## 🚀 Running the Project Locally
 
-The following steps will get the full stack up and running on your local machine (Windows PowerShell).
+The project consists of a React/Express application and a separate Python AI Microservice. You can start both easily using the provided startup script, or run them manually.
 
-1. **Start infrastructure**  
-   Ensure Docker Desktop is running, then from the `backend/` directory run:
-   ```bash
-   docker compose up -d db redis
-   ```
-   This pulls and starts PostgreSQL and Redis containers.
+### Option A: Using the Quick Start Script (Windows PowerShell)
+We have provided an automated script that opens two new terminal windows and starts both services for you.
+From the root directory (`e:\ecotrack`), run:
+```powershell
+.\start.ps1
+```
+Wait for the blue window to say "ready", then open **http://localhost:5173** in your browser.
 
-2. **Seed the database (optional but recommended)**
-   ```bash
-   python -m app.database.seed
-   ```
+### Option B: Running Manually
 
-3. **Install dependencies**  
-   From the repository root install all Node.js dependencies:
-   ```bash
-   npm ci
-   ```
+If you prefer to run the services manually, follow these steps:
 
-4. **Start the frontend**
-   ```bash
-   npm run dev
-   ```
+#### 1. Start the Python AI Service
+Open a terminal, navigate to the AI service directory, set up a virtual environment, and start the API:
+```powershell
+cd ecotrack-ai-service
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+*(Alternatively, you can build and run it using Docker: `docker build -t ecotrack-ai .` followed by `docker run -p 8000:8000 ecotrack-ai`)*
 
-5. **Start the backend API**  
-   From the `backend/` directory run:
-   ```bash
-   python -m uvicorn app.main:app --reload
-   ```
+#### 2. Start the Main EcoTrack App (React + Express)
+Open a **new** terminal window, navigate to the root directory, install dependencies, and start the dev server:
+```powershell
+cd e:\ecotrack
+npm install
+npm run dev
+```
 
 You can now access:
-- Frontend: <http://localhost:3000>
-- API docs (Swagger UI): <http://localhost:8000/docs>
+- Frontend & Backend API: <http://localhost:5173>
+- AI Microservice API Docs: <http://localhost:8000/docs>
 
 ## 🧪 Testing Suite & CI/CD Readiness
 
