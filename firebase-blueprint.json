@@ -1,0 +1,147 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile document containing role and system statistics.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" },
+        "fullName": { "type": "string" },
+        "area": { "type": "string" },
+        "phone": { "type": "string" },
+        "points": { "type": "number" },
+        "reportCount": { "type": "number" },
+        "language": { "type": "string" },
+        "city": { "type": "string" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "BinReport": {
+      "title": "Bin Report",
+      "description": "A waste/bin report submitted by a citizen.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "address": { "type": "string" },
+        "status": { "type": "string" },
+        "severity": { "type": "string" },
+        "upvotes": { "type": "number" },
+        "pointsAwarded": { "type": "number" },
+        "reporterName": { "type": "string" },
+        "upvotedBy": { "type": "array" }
+      },
+      "required": ["userId", "latitude", "longitude", "status"]
+    },
+    "CollectionSchedule": {
+      "title": "Collection Schedule",
+      "description": "A scheduled municipal pickup time for an area.",
+      "type": "object",
+      "properties": {
+        "areaName": { "type": "string" },
+        "city": { "type": "string" },
+        "wasteType": { "type": "string" },
+        "collectorId": { "type": "string" },
+        "daysOfWeek": { "type": "array" },
+        "timeWindow": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["areaName", "city", "wasteType", "collectorId"]
+    },
+    "MarketplaceListing": {
+      "title": "Marketplace Listing",
+      "description": "Waste items offered or claimed in the circular economy marketplace.",
+      "type": "object",
+      "properties": {
+        "posterId": { "type": "string" },
+        "posterName": { "type": "string" },
+        "posterType": { "type": "string" },
+        "wasteType": { "type": "string" },
+        "quantityEstimate": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "location": { "type": "object" },
+        "status": { "type": "string" },
+        "contactPhone": { "type": "string" }
+      },
+      "required": ["posterId", "posterName", "wasteType", "status"]
+    },
+    "Reward": {
+      "title": "Reward Item",
+      "description": "A reward voucher or item redeemable by points in the catalog.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "pointsCost": { "type": "number" },
+        "partner": { "type": "string" },
+        "stock": { "type": "number" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["title", "pointsCost", "stock"]
+    },
+    "Redemption": {
+      "title": "Redemption Log",
+      "description": "A log of a reward voucher redeemed by a citizen.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "rewardId": { "type": "string" },
+        "voucherCode": { "type": "string" },
+        "status": { "type": "string" },
+        "pointsSpent": { "type": "number" }
+      },
+      "required": ["userId", "rewardId", "voucherCode", "pointsSpent"]
+    },
+    "WasteScan": {
+      "title": "Waste Scan",
+      "description": "AI categorization of classified waste items.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "predictedCategory": { "type": "string" },
+        "binColor": { "type": "string" },
+        "pointsAwarded": { "type": "number" },
+        "confidence": { "type": "number" },
+        "recyclable": { "type": "boolean" }
+      },
+      "required": ["userId", "predictedCategory", "binColor"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and scores."
+    },
+    "/binReports/{reportId}": {
+      "schema": "BinReport",
+      "description": "Citizen reported garbage/overflow issues."
+    },
+    "/collectionSchedules/{scheduleId}": {
+      "schema": "CollectionSchedule",
+      "description": "Municipal or collector routes and timings."
+    },
+    "/marketplaceListings/{listingId}": {
+      "schema": "MarketplaceListing",
+      "description": "Marketplace recycled goods postings."
+    },
+    "/rewards/{rewardId}": {
+      "schema": "Reward",
+      "description": "Rewards catalogs."
+    },
+    "/redemptions/{redemptionId}": {
+      "schema": "Redemption",
+      "description": "Redeemed catalog rewards log."
+    },
+    "/scans/{scanId}": {
+      "schema": "WasteScan",
+      "description": "Logs of user AI scans."
+    }
+  }
+}

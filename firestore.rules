@@ -1,0 +1,158 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net (Pillar 4 / 1)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- REUSABLE SECURITY PRIMITIVES ---
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasAnyRole(roles) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             getUserData().role in roles;
+    }
+
+    function hasRole(role) {
+      return hasAnyRole([role]);
+    }
+
+    function isAdmin() {
+      return hasAnyRole(['admin', 'super_admin']);
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- COLLECTION RULES & VALIDATIONS ---
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if true;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Bin Reports Collection (including old reports fallback path)
+    match /binReports/{reportId} {
+      allow get: if isAuthenticated();
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && incoming().userId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        existing().userId == request.auth.uid || 
+        hasRole('collector') || 
+        isAdmin() ||
+        // Action: Upvote by other citizens
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['upvotes', 'upvotedBy']) &&
+          incoming().upvotes == existing().upvotes + 1 &&
+          incoming().upvotedBy.size() == existing().upvotedBy.size() + 1 &&
+          incoming().upvotedBy.hasAll(existing().upvotedBy) &&
+          incoming().upvotedBy.hasAll([request.auth.uid])
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Legacy reports path
+    match /reports/{reportId} {
+      allow get: if isAuthenticated();
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && incoming().userId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        existing().userId == request.auth.uid || 
+        hasRole('collector') || 
+        isAdmin() ||
+        // Action: Upvote
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['upvotes', 'upvotedBy']) &&
+          incoming().upvotes == existing().upvotes + 1 &&
+          incoming().upvotedBy.size() == existing().upvotedBy.size() + 1 &&
+          incoming().upvotedBy.hasAll(existing().upvotedBy) &&
+          incoming().upvotedBy.hasAll([request.auth.uid])
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Collection Schedules Collection
+    match /collectionSchedules/{scheduleId} {
+      allow get, list: if isAuthenticated();
+      allow create: if isAuthenticated() && (incoming().collectorId == request.auth.uid || isAdmin());
+      allow update, delete: if isAuthenticated() && (existing().collectorId == request.auth.uid || isAdmin());
+    }
+
+    // Legacy schedules path
+    match /schedules/{scheduleId} {
+      allow get, list: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Marketplace Listings Collection
+    match /marketplaceListings/{listingId} {
+      allow get, list: if isAuthenticated();
+      allow create: if isAuthenticated() && incoming().posterId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        existing().posterId == request.auth.uid || 
+        isAdmin() ||
+        // Action: Claim listing
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+          incoming().status == 'claimed'
+        )
+      );
+      allow delete: if isAuthenticated() && (existing().posterId == request.auth.uid || isAdmin());
+    }
+
+    // Rewards Collection Catalog
+    match /rewards/{rewardId} {
+      allow get, list: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated(); // Allowed for fallback seeding and admin modification
+    }
+
+    // Redemptions Collection
+    match /redemptions/{redemptionId} {
+      allow get: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Waste Scans Collection
+    match /scans/{scanId} {
+      allow get: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && incoming().userId == request.auth.uid;
+      allow update: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Audit Logs Collection
+    match /audit_logs/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+  }
+}

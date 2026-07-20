@@ -1,0 +1,6 @@
+{
+  "name": "EcoTrack",
+  "description": "AI-powered, crowdsourced smart waste management and recycling platform for Hyderabad, Sindh.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

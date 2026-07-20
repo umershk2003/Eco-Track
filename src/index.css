@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --natural-dark: #1b4332;
+  --natural-medium: #2d6a4f;
+  --natural-light: #95d5b2;
+  --natural-pale: #d8f3dc;
+  --natural-bg: #fdfcfb;
+  --natural-map: #f5f2ed;
+  --natural-deep: #081c15;
+  --natural-straw: #e9edc9;
+  --natural-sage: #a3b18a;
+}
+
+/* High-contrast dark mode optimized for night-time waste reporting and collection */
+.dark {
+  --natural-dark: #000000;          /* Pure black backdrops for extreme night contrast */
+  --natural-medium: #0d1527;        /* High-contrast deep slate navy */
+  --natural-light: #39ff14;         /* Neon green for high-visibility action cues and badges */
+  --natural-pale: #1e293b;          /* Dark charcoal grey */
+  --natural-bg: #090d16;            /* Pitch night background */
+  --natural-map: #020617;           /* Slate black map contrast */
+  --natural-deep: #000000;
+  --natural-straw: #ffff00;         /* High-visibility pure warning yellow */
+  --natural-sage: #22c55e;          /* Saturated success green */
+}
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-natural-dark: var(--natural-dark);
+  --color-natural-medium: var(--natural-medium);
+  --color-natural-light: var(--natural-light);
+  --color-natural-pale: var(--natural-pale);
+  --color-natural-bg: var(--natural-bg);
+  --color-natural-map: var(--natural-map);
+  --color-natural-deep: var(--natural-deep);
+  --color-natural-straw: var(--natural-straw);
+  --color-natural-sage: var(--natural-sage);
+}
+
+body {
+  background-color: var(--natural-bg);
+  font-family: var(--font-sans);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ==========================================
+   HIGH-CONTRAST NIGHT-TIME VISIBILITY OVERRIDES
+   ========================================== */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #090d16 !important;
+  color: #f8fafc !important;
+}
+
+/* Force standard container card backgrounds to have deep backgrounds */
+.dark .bg-white,
+.dark .bg-\[\#fdfcfb\],
+.dark .bg-stone-50\/40 {
+  background-color: #111827 !important;
+}
+
+/* Force subtle backgrounds to be legible gray */
+.dark .bg-stone-50,
+.dark .bg-stone-50\/50,
+.dark .bg-stone-100,
+.dark .bg-stone-100\/50 {
+  background-color: #1f2937 !important;
+}
+
+/* Typography contrast corrections */
+.dark .text-stone-800,
+.dark .text-stone-900,
+.dark .text-gray-900,
+.dark .text-slate-900 {
+  color: #ffffff !important;
+}
+
+.dark .text-stone-600,
+.dark .text-stone-700,
+.dark .text-gray-700 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-stone-400,
+.dark .text-stone-500,
+.dark .text-gray-500 {
+  color: #cbd5e1 !important;
+}
+
+/* Borders and Dividers */
+.dark .border-stone-100,
+.dark .border-stone-200,
+.dark .border-stone-150,
+.dark .border-stone-50 {
+  border-color: #374151 !important;
+}
+
+/* High visibility inputs, select dropdowns, textareas */
+.dark input, 
+.dark select, 
+.dark textarea {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #475569 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Bottom navigation bar high visibility contrast */
+.dark nav {
+  background-color: #0c101b !important;
+  border-color: #334155 !important;
+}
+
+/* Fix chat messages and chatbot popup */
+.dark .bg-stone-200 {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.dark .bg-stone-50\/50 {
+  background-color: #111827 !important;
+}
+
+/* Badges & special text elements */
+.dark .bg-natural-straw {
+  background-color: #eab308 !important; /* Vivid gold warning */
+  color: #000000 !important;
+}
+
+/* Specific elements using text-natural-dark when selected or highlighted */
+.dark .text-natural-dark {
+  color: #39ff14 !important; /* Map to high-visibility neon green */
+}
+
+/* Keep active icons and text highly distinct */
+.dark .bg-natural-pale {
+  background-color: #1e293b !important;
+}
+
+/* High-contrast status alerts for nocturnal bin inspections */
+.dark .text-red-500 {
+  color: #ff453a !important; /* Bright iOS dark-mode style red */
+}
+.dark .bg-red-50 {
+  background-color: #450a0a !important;
+  border-color: #991b1b !important;
+}
+.dark .text-red-800 {
+  color: #fca5a5 !important;
+}
+
