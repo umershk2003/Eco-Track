@@ -6,3 +6,16 @@ coverage/
 *.log
 .env*
 !.env.example
+# IDE / editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+venv/
