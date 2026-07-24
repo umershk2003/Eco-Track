@@ -142,6 +142,57 @@ The AI engine inside `/server/services/aiService.ts` executes an advanced hybrid
 
 ---
 
+## 🐍 Python AI Computer Vision Service (`/ecotrack-ai-service`)
+
+A dedicated Python microservice that runs alongside the main Node.js server, providing real-time **waste image detection and classification** using computer vision.
+
+### How It Works
+
+```text
+ Citizen uploads a photo (bin / waste item)
+         ↓
+ POST http://localhost:8000/api/ai/detect
+         ↓
+ OpenCV preprocesses the image
+         ↓
+ YOLOv8 model runs inference
+         ↓
+ Returns: detected waste types + confidence scores + bounding boxes
+```
+
+### Example Response
+```json
+{
+  "success": true,
+  "detections": [
+    {
+      "class_name": "plastic_bottle",
+      "confidence": 0.92,
+      "boundingBox": { "x": 120, "y": 85, "width": 200, "height": 150 }
+    }
+  ]
+}
+```
+
+### Role in EcoTrack
+
+| Feature | What the AI Service Does |
+|---|---|
+| 📸 **Bin Scanning** | Citizen takes a photo → YOLO detects what waste type it is |
+| ♻️ **Waste Classification** | Identifies plastic, glass, paper, organic waste, etc. |
+| 📍 **Bin Inspection** | Detects if a bin is overflowing or not |
+| 🏆 **Points Awarding** | Classification result triggers eco-points rewards for citizens |
+
+### Tech Stack
+- **FastAPI** — lightweight async Python web framework
+- **YOLOv8 (Ultralytics)** — state-of-the-art real-time object detection
+- **OpenCV** — image preprocessing pipeline
+- **Custom model**: `models/waste_yolo.pt` *(falls back to generic YOLOv8n in development if not present)*
+
+> **Note:** This service runs separately on **http://localhost:8000**. The main Express app at port 3000 communicates with it for image-based waste detection features.
+
+---
+
 ## 🗄️ Database Schemas & Models & Resiliency
 
 EcoTrack integrates structured collections inside Cloud Firestore with a robust, fail-safe layer to keep client and backend components fully operational under any deployment state:
@@ -298,40 +349,89 @@ npm run start
 
 ## 🚀 Running the Project Locally
 
-The following steps will get the full stack up and running on your local machine (Windows PowerShell).
+The project consists of a React/Express application and a separate Python AI Microservice. No Docker is required — everything runs directly on your machine.
 
-1. **Start infrastructure**  
-   Ensure Docker Desktop is running, then from the `backend/` directory run:
-   ```bash
-   docker compose up -d db redis
-   ```
-   This pulls and starts PostgreSQL and Redis containers.
+---
 
-2. **Seed the database (optional but recommended)**
-   ```bash
-   python -m app.database.seed
-   ```
+### ✅ Prerequisites
 
-3. **Install dependencies**  
-   From the repository root install all Node.js dependencies:
-   ```bash
-   npm ci
-   ```
+Make sure the following are installed:
+- **Node.js** v18+ → [nodejs.org](https://nodejs.org)
+- **Python** 3.11+ → [python.org](https://www.python.org)
+- **npm** (comes with Node.js)
 
-4. **Start the frontend**
-   ```bash
-   npm run dev
-   ```
+---
 
-5. **Start the backend API**  
-   From the `backend/` directory run:
-   ```bash
-   python -m uvicorn app.main:app --reload
-   ```
+### ⚙️ One-Time Setup
 
-You can now access:
-- Frontend: <http://localhost:3000>
-- API docs (Swagger UI): <http://localhost:8000/docs>
+#### 1. Configure environment variables
+Copy the example env file and add your API keys:
+```powershell
+copy .env.example .env
+```
+Then open `.env` and fill in your keys:
+```env
+GEMINI_API_KEY="your_gemini_key_here"   # Required for AI features
+GROQ_API_KEY="your_groq_key_here"       # Optional — faster AI responses
+```
+> 🔑 Get a free Gemini key at → **https://aistudio.google.com/apikey**
+
+#### 2. Install Node.js dependencies
+```powershell
+npm install
+```
+
+#### 3. Set up the Python AI Service (one-time only)
+```powershell
+cd ecotrack-ai-service
+python -m venv venv
+.\venv\Scripts\pip install -r requirements.txt
+cd ..
+```
+
+---
+
+### ▶️ Running the Project
+
+Open **two separate terminal windows** and run each command:
+
+**Terminal 1 — Main App (React + Express backend):**
+```powershell
+cd e:\ecotrack
+npm run dev
+```
+
+**Terminal 2 — Python AI Service:**
+```powershell
+cd e:\ecotrack\ecotrack-ai-service
+.\venv\Scripts\uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+---
+
+### 🌐 Access URLs
+
+| Service | URL | Description |
+|---|---|---|
+| **Frontend + Express API** | http://localhost:3000 | Main React app & all `/api` routes |
+| **Python AI Service** | http://localhost:8000 | YOLO image detection microservice |
+| **AI Service Docs** | http://localhost:8000/docs | Interactive Swagger UI |
+| **Health Check** | http://localhost:8000/health | Verify AI service is alive |
+
+---
+
+### 🔍 Verify Everything is Running
+
+Check the main app:
+```powershell
+curl http://localhost:3000/health
+```
+
+Check the Python AI service:
+```powershell
+curl http://localhost:8000/health
+# Expected response: {"status": "ok"}
+```
 
 ## 🧪 Testing Suite & CI/CD Readiness
 

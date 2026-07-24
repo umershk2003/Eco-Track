@@ -324,6 +324,93 @@ DIY handling steps.`;
       next(error);
     }
   }
+
+  /**
+   * YOLO based waste detection integration
+   */
+  public async detectWaste(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) {
+        throw new ValidationError('No image file provided in the request.');
+      }
+
+      // We might not have auth context depending on current setup, defaulting for now
+      const userId = (req as any).user?.uid || 'anonymous';
+      
+      const { pythonAIService } = require('../services/pythonAIService');
+      const { RecommendationService } = require('../services/recommendationService');
+      const { FirebaseScanService } = require('../services/firebaseScanService');
+
+      const recommendationService = new RecommendationService();
+      const firebaseScanService = new FirebaseScanService();
+
+      Logger.info('AI', 'Starting YOLO waste detection request...');
+      
+      // 1. Upload to Firebase Storage
+      const imageUrl = await firebaseScanService.uploadImage(req.file.buffer, req.file.mimetype, userId);
+
+      // 2. Call Python Service
+      const aiResponse = await pythonAIService.detectWaste(req.file.buffer, req.file.originalname, req.file.mimetype);
+
+      if (!aiResponse.success) {
+        throw new ApiError('AI Detection failed: ' + aiResponse.error);
+      }
+
+      // 3. Process detections and get recommendations
+      const formattedDetections: any[] = [];
+      let totalEcoPoints = 0;
+      let recyclableCount = 0;
+      let hazardousCount = 0;
+      let organicCount = 0;
+
+      for (const detection of aiResponse.detections) {
+        const recommendation = recommendationService.getRecommendation(detection.class_name);
+        
+        formattedDetections.push({
+          ...detection,
+          ...recommendation
+        });
+
+        totalEcoPoints += recommendation.ecoPoints;
+        if (recommendation.recyclable) recyclableCount++;
+        if (recommendation.category === 'Hazardous Waste') hazardousCount++;
+        if (recommendation.category === 'Food Waste' || recommendation.category === 'Organic') organicCount++;
+      }
+
+      const summary = {
+        totalObjects: aiResponse.detections.length,
+        recyclable: recyclableCount,
+        hazardous: hazardousCount,
+        organic: organicCount,
+        ecoPoints: totalEcoPoints
+      };
+
+      // 4. Save to Firestore
+      const scanId = await firebaseScanService.saveScan({
+        userId,
+        imageUrl,
+        detections: formattedDetections,
+        totalObjects: summary.totalObjects,
+        recyclableCount,
+        hazardousCount,
+        ecoPoints: totalEcoPoints,
+        createdAt: new Date()
+      });
+
+      Logger.info('AI', 'YOLO waste detection completed successfully', { scanId, totalObjects: summary.totalObjects });
+
+      return res.json({
+        success: true,
+        scanId,
+        detections: formattedDetections,
+        summary
+      });
+
+    } catch (error: any) {
+      Logger.error('AI', 'Error in detectWaste', error);
+      return res.status(error.statusCode || 500).json({ success: false, error: error.message });
+    }
+  }
 }
 
 export const aiController = new AIController();
