@@ -1,0 +1,12 @@
+fastapi[standard]
+uvicorn[standard]
+sqlalchemy[asyncio]>=2.0
+aiosqlite
+pydantic>=2.0
+pydantic-settings
+opencv-python-headless
+ultralytics
+google-genai
+groq
+python-multipart
+python-dotenv
